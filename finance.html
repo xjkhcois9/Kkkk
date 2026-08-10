@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
+    <title>الحسابات والمالية - نظام المطعم</title>
+    <link rel="stylesheet" href="finance.css">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">₽</div>
+                <div>
+                    <h1>نظام المطعم</h1>
+                    <span>الحسابات والمالية</span>
+                </div>
+            </div>
+
+            <nav class="nav">
+                <button class="nav-item active" data-section="dashboard">لوحة المالية</button>
+                <button class="nav-item" data-section="sales">المبيعات</button>
+                <button class="nav-item" data-section="meal-costs">تكلفة الوجبات</button>
+                <button class="nav-item" data-section="salaries">تكلفة الرواتب</button>
+                <button class="nav-item" data-section="expenses">التكاليف الأخرى</button>
+                <button class="nav-item" data-section="profits">صافي الأرباح</button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <span>العملة</span>
+                <strong>الدينار العراقي (د.ع)</strong>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <h2 id="pageTitle">لوحة الحسابات والمالية</h2>
+                    <p id="pageSubtitle">متابعة الإيرادات والتكاليف والأرباح</p>
+                </div>
+                <div class="topbar-actions">
+                    <button id="refreshBtn" class="btn btn-secondary">↻ تحديث</button>
+                    <button id="addTransactionBtn" class="btn btn-primary">＋ إضافة عملية</button>
+                </div>
+            </header>
+
+            <section id="dashboardSection" class="page-section active">
+                <div class="hero">
+                    <div>
+                        <span class="eyebrow">نظرة مالية سريعة</span>
+                        <h3>الأداء المالي للمطعم</h3>
+                        <p>يتم تحديث المؤشرات تلقائيًا من البيانات المحفوظة في النظام.</p>
+                    </div>
+                    <div class="period-control">
+                        <label for="periodFilter">الفترة</label>
+                        <select id="periodFilter">
+                            <option value="today">اليوم</option>
+                            <option value="week">هذا الأسبوع</option>
+                            <option value="month" selected>هذا الشهر</option>
+                            <option value="year">هذه السنة</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <article class="stat-card revenue">
+                        <span>مبيعات اليوم</span>
+                        <strong id="todaySales">0 د.ع</strong>
+                        <small>إجمالي الطلبات المدفوعة اليوم</small>
+                    </article>
+                    <article class="stat-card revenue">
+                        <span>مبيعات الأسبوع</span>
+                        <strong id="weekSales">0 د.ع</strong>
+                        <small>من بداية الأسبوع الحالي</small>
+                    </article>
+                    <article class="stat-card revenue">
+                        <span>مبيعات الشهر</span>
+                        <strong id="monthSales">0 د.ع</strong>
+                        <small>من بداية الشهر الحالي</small>
+                    </article>
+                    <article class="stat-card orders">
+                        <span>عدد الطلبات</span>
+                        <strong id="orderCount">0</strong>
+                        <small>الطلبات المكتملة والمدفوعة</small>
+                    </article>
+                    <article class="stat-card average">
+                        <span>متوسط قيمة الطلب</span>
+                        <strong id="averageOrder">0 د.ع</strong>
+                        <small>المبيعات ÷ عدد الطلبات</small>
+                    </article>
+                    <article class="stat-card profit">
+                        <span>صافي الأرباح</span>
+                        <strong id="netProfit">0 د.ع</strong>
+                        <small>بعد خصم التكاليف المسجلة</small>
+                    </article>
+                </div>
+
+                <div class="two-column">
+                    <section class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3>ملخص الفترة</h3>
+                                <p id="periodSummary">هذا الشهر</p>
+                            </div>
+                        </div>
+                        <div class="summary-list">
+                            <div><span>المبيعات</span><strong id="summarySales">0 د.ع</strong></div>
+                            <div><span>تكلفة الوجبات</span><strong id="summaryMealCosts">0 د.ع</strong></div>
+                            <div><span>الرواتب</span><strong id="summarySalaries">0 د.ع</strong></div>
+                            <div><span>التكاليف الأخرى</span><strong id="summaryExpenses">0 د.ع</strong></div>
+                            <div class="summary-total"><span>صافي الأرباح</span><strong id="summaryProfit">0 د.ع</strong></div>
+                        </div>
+                    </section>
+
+                    <section class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3>آخر المبيعات</h3>
+                                <p>آخر 8 عمليات مسجلة</p>
+                            </div>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>الطلب</th>
+                                        <th>التاريخ</th>
+                                        <th>الدفع</th>
+                                        <th>المبلغ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentSalesBody"></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            <section id="salesSection" class="page-section">
+                <div class="section-toolbar">
+                    <div>
+                        <h3>المبيعات</h3>
+                        <p>تسجيل ومراجعة الإيرادات الناتجة عن الطلبات.</p>
+                    </div>
+                    <button class="btn btn-primary" data-open-form="sale">＋ تسجيل بيع</button>
+                </div>
+
+                <div class="stats-grid compact">
+                    <article class="stat-card"><span>اليوم</span><strong id="salesTodaySection">0 د.ع</strong></article>
+                    <article class="stat-card"><span>الأسبوع</span><strong id="salesWeekSection">0 د.ع</strong></article>
+                    <article class="stat-card"><span>الشهر</span><strong id="salesMonthSection">0 د.ع</strong></article>
+                    <article class="stat-card"><span>عدد الطلبات</span><strong id="salesOrdersSection">0</strong></article>
+                    <article class="stat-card"><span>متوسط الطلب</span><strong id="salesAverageSection">0 د.ع</strong></article>
+                </div>
+
+                <section class="panel">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>رقم العملية</th>
+                                    <th>رقم الطلب</th>
+                                    <th>التاريخ والوقت</th>
+                                    <th>طريقة الدفع</th>
+                                    <th>المبلغ</th>
+                                    <th>الحالة</th>
+                                    <th>إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesTableBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </section>
+
+            <section id="mealCostsSection" class="page-section">
+                <div class="section-toolbar">
+                    <div><h3>تكلفة الوجبات</h3><p>سجل تكلفة المواد المستخدمة في إنتاج الوجبات.</p></div>
+                    <button class="btn btn-primary" data-open-form="mealCost">＋ إضافة تكلفة</button>
+                </div>
+                <section class="panel">
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>التاريخ</th><th>الوجبة</th><th>الوصف</th><th>المبلغ</th><th>إجراء</th></tr></thead>
+                            <tbody id="mealCostsBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </section>
+
+            <section id="salariesSection" class="page-section">
+                <div class="section-toolbar">
+                    <div><h3>تكلفة الرواتب</h3><p>إدارة الرواتب والمكافآت والخصومات المسجلة ماليًا.</p></div>
+                    <button class="btn btn-primary" data-open-form="salary">＋ إضافة راتب</button>
+                </div>
+                <section class="panel">
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>التاريخ</th><th>الموظف</th><th>الوظيفة</th><th>الصافي</th><th>إجراء</th></tr></thead>
+                            <tbody id="salariesBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </section>
+
+            <section id="expensesSection" class="page-section">
+                <div class="section-toolbar">
+                    <div><h3>التكاليف الأخرى</h3><p>إيجار، كهرباء، صيانة، تسويق، نقل وغيرها.</p></div>
+                    <button class="btn btn-primary" data-open-form="expense">＋ إضافة تكلفة</button>
+                </div>
+                <section class="panel">
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>التاريخ</th><th>التصنيف</th><th>الوصف</th><th>المبلغ</th><th>إجراء</th></tr></thead>
+                            <tbody id="expensesBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </section>
+
+            <section id="profitsSection" class="page-section">
+                <div class="section-toolbar">
+                    <div><h3>صافي الأرباح</h3><p>الحساب التلقائي للإيرادات مطروحًا منها جميع التكاليف المسجلة.</p></div>
+                    <select id="profitPeriod">
+                        <option value="today">اليوم</option>
+                        <option value="week">هذا الأسبوع</option>
+                        <option value="month" selected>هذا الشهر</option>
+                        <option value="year">هذه السنة</option>
+                    </select>
+                </div>
+                <div class="profit-board">
+                    <div><span>المبيعات</span><strong id="profitSales">0 د.ع</strong></div>
+                    <div><span>تكلفة الوجبات</span><strong id="profitMealCosts">0 د.ع</strong></div>
+                    <div><span>الرواتب</span><strong id="profitSalaries">0 د.ع</strong></div>
+                    <div><span>التكاليف الأخرى</span><strong id="profitExpenses">0 د.ع</strong></div>
+                    <div class="profit-final"><span>صافي الأرباح</span><strong id="profitNet">0 د.ع</strong></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="modal" class="modal hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div><h3 id="modalTitle">إضافة عملية</h3><p id="modalDescription">أدخل بيانات العملية.</p></div>
+                <button id="closeModal" class="icon-btn">×</button>
+            </div>
+            <form id="transactionForm">
+                <input type="hidden" id="transactionType">
+                <div id="dynamicFields"></div>
+                <div class="form-actions">
+                    <button type="button" id="cancelModal" class="btn btn-secondary">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ العملية</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+   
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyBqWQHxs7icdXVL2PuWAPtmnHUjPR2kpKc",
+    authDomain: "project-ac9d8.firebaseapp.com",
+    projectId: "project-ac9d8",
+    storageBucket: "project-ac9d8.firebasestorage.app",
+    messagingSenderId: "439451492727",
+    appId: "1:439451492727:web:acb3007ff68060a7300172"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+</script>
+
+<script src="finance.js"></script>
+</body>
+</html>

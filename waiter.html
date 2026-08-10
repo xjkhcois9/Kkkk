@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    
+    <!-- مكتبات الفايربيس للربط السحابي -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+  // بيانات مشروعك الخاصة بـ Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyBqWQHxs7icdXVL2PuWAPtmnHUjPR2kpKc",
+    authDomain: "project-ac9d8.firebaseapp.com",
+    projectId: "project-ac9d8",
+    storageBucket: "project-ac9d8.firebasestorage.app",
+    messagingSenderId: "439451492727",
+    appId: "1:439451492727:web:acb3007ff68060a7300172"
+  };
+
+  // تهيئة قاعدة البيانات
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شاشة النادل - إدارة الطاولات والطلبات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --status-new: #ef4444;
+            --status-preparing: #f59e0b;
+            --status-ready: #10b981;
+            --radius: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 16px 28px;
+            border-radius: var(--radius);
+            text-align: center;
+            min-width: 160px;
+            border-top: 4px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card span {
+            font-size: 30px;
+            font-weight: 800;
+            display: block;
+        }
+
+        .stat-card p {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .stat-card.red { border-color: var(--status-new); }
+        .stat-card.red span { color: var(--status-new); }
+
+        .stat-card.yellow { border-color: var(--status-preparing); }
+        .stat-card.yellow span { color: var(--status-preparing); }
+
+        .stat-card.green { border-color: var(--status-ready); }
+        .stat-card.green span { color: var(--status-ready); }
+
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .toolbar input, .toolbar select {
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .toolbar input {
+            flex: 1;
+            max-width: 350px;
+        }
+
+        .toolbar button {
+            padding: 12px 22px;
+            border-radius: 8px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toolbar button:hover {
+            background: var(--primary-dark);
+        }
+
+        .orders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .order-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .order-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 14px;
+        }
+
+        .table-title {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .status-badge.new { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .status-badge.preparing { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .status-badge.ready { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .status-badge.delivered { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
+
+        .items-list {
+            list-style: none;
+            margin-bottom: 15px;
+        }
+
+        .items-list li {
+            background: #0f172a;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .notes-box {
+            background: #0f172a;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #cbd5e1;
+            margin-bottom: 10px;
+            border-right: 3px solid var(--primary);
+        }
+
+        /* تنسيق صندوق السعر الكلي */
+        .price-box {
+            background: #0f172a;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-right: 3px solid #10b981;
+        }
+
+        .timer-box {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--status-preparing);
+            text-align: center;
+            margin-bottom: 16px;
+            background: #0f172a;
+            padding: 8px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-deliver {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            background: #10b981;
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-deliver:hover {
+            background: #059669;
+        }
+
+        .btn-deliver:disabled {
+            background: #334155;
+            color: #64748b;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            font-size: 18px;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            border: 1px dashed var(--border-color);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>🤵‍♂️ شاشة النادل (متابعة الطلبات وتقديم الوجبات)</h1>
+            <div class="stats-bar">
+                <div class="stat-card red">
+                    <span id="countNew">0</span>
+                    <p>طلبات جديدة</p>
+                </div>
+                <div class="stat-card yellow">
+                    <span id="countPreparing">0</span>
+                    <p>قيد التحضير</p>
+                </div>
+                <div class="stat-card green">
+                    <span id="countReady">0</span>
+                    <p>جاهزة للتقديم 🔥</p>
+                </div>
+            </div>
+        </header>
+
+        <section class="toolbar">
+            <input type="text" id="searchInput" placeholder="🔍 البحث برقم الطاولة...">
+            <select id="statusFilter">
+                <option value="all">جميع الحالات</option>
+                <option value="ready">جاهز للتقديم فقط 🔥</option>
+                <option value="preparing">قيد التحضير</option>
+                <option value="new">جديد</option>
+            </select>
+            <button id="refreshBtn">تحديث 🔄</button>
+        </section>
+
+        <section id="ordersGrid" class="orders-grid">
+            <!-- سيتم تحميل البطاقات هنا تلقائياً -->
+        </section>
+    </div>
+
+    <script>
+        let orders = [];
+        let timerIntervals = [];
+
+        let unsubscribeOrders = null;
+
+        function loadOrders() {
+            timerIntervals.forEach(interval => clearInterval(interval));
+            timerIntervals = [];
+
+            if (unsubscribeOrders) unsubscribeOrders();
+
+            unsubscribeOrders = db.collection("orders")
+                .orderBy("createdAt", "desc")
+                .onSnapshot(snapshot => {
+                    orders = [];
+                    snapshot.forEach(doc => {
+                        orders.push({ ...doc.data(), firebaseId: doc.id });
+                    });
+                    renderOrders();
+                    updateStats();
+                }, error => {
+                    console.error("Firebase orders error:", error);
+                });
+        }
+
+        function updateStats() {
+            let newCnt = 0, prepCnt = 0, readyCnt = 0;
+            orders.forEach(o => {
+                if (o.status === "new") newCnt++;
+                else if (o.status === "preparing") prepCnt++;
+                else if (o.status === "ready") readyCnt++;
+            });
+            document.getElementById("countNew").textContent = newCnt;
+            document.getElementById("countPreparing").textContent = prepCnt;
+            document.getElementById("countReady").textContent = readyCnt;
+        }
+
+        function renderOrders() {
+            const grid = document.getElementById("ordersGrid");
+            const filterValue = document.getElementById("statusFilter").value;
+            const searchValue = document.getElementById("searchInput").value.trim().toLowerCase();
+
+            grid.innerHTML = "";
+
+            // تصفية الطلبات التي لم تُقدّم بعد
+            let filtered = orders.filter(o => o.status !== "delivered");
+
+            if (filterValue !== "all") {
+                filtered = filtered.filter(o => o.status === filterValue);
+            }
+
+            if (searchValue) {
+                filtered = filtered.filter(o => String(o.table).toLowerCase().includes(searchValue));
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div class="empty-state">لا توجد طلبات نشطة حالياً 🍽️</div>';
+                return;
+            }
+
+            filtered.forEach(order => {
+                const realIndex = orders.indexOf(order);
+                const card = document.createElement("div");
+                card.className = "order-card";
+
+                const statusObj = getStatusBadge(order.status);
+
+                let itemsHtml = "";
+                if (Array.isArray(order.items)) {
+                    itemsHtml = order.items.map(item => {
+                        if (typeof item === "object" && item !== null) {
+                            let foodName = item.name || item.title || "صنف غير معروف";
+                            let foodQty = item.quantity || item.qty || 1;
+                            return `
+                                <li style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>🍽️ ${foodName}</span>
+                                    <strong style="background:#2563eb; color:#fff; padding:2px 8px; border-radius:12px; font-size:13px; margin-right: auto;">× ${foodQty}</strong>
+                                </li>
+                            `;
+                        } else {
+                            return `<li>🍽️ ${item}</li>`;
+                        }
+                    }).join("");
+                }
+
+                // حساب إجمالي السعر للطلب
+                let totalAmount = order.totalPrice;
+                if (totalAmount === undefined || totalAmount === null) {
+                    totalAmount = 0;
+                    if (Array.isArray(order.items)) {
+                        order.items.forEach(item => {
+                            if (typeof item === "object" && item !== null) {
+                                let price = item.price || 0;
+                                let qty = item.quantity || item.qty || 1;
+                                totalAmount += price * qty;
+                            }
+                        });
+                    }
+                }
+
+                const formattedTotal = totalAmount.toLocaleString('ar-IQ') + ' د.ع';
+
+                card.innerHTML = `
+                    <div>
+                        <div class="card-header">
+                            <div class="table-title">🪑 طاولة ${order.table || "-"}</div>
+                            <span class="status-badge ${order.status}">${statusObj.label}</span>
+                        </div>
+                        <ul class="items-list">
+                            ${itemsHtml}
+                        </ul>
+                        <div class="notes-box">
+                            <strong>ملاحظات:</strong> ${order.notes || "لا توجد ملاحظات"}
+                        </div>
+                        <div class="price-box">
+                            <span>💳 إجمالي الحساب:</span>
+                            <span>${formattedTotal}</span>
+                        </div>
+                        <div class="timer-box">
+                            ⏱️ منذ: <span class="timer-val" id="timer-${realIndex}">00:00</span>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn-deliver" ${order.status !== 'ready' ? 'disabled' : ''} onclick="markDelivered(${realIndex})">
+                            ${order.status === 'ready' ? '✅ تقديم الطلب للطاولة' : '⏳ ينتظر تحضير الشيف'}
+                        </button>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+                startTimer(order.time, `timer-${realIndex}`);
+            });
+        }
+
+        function getStatusBadge(status) {
+            switch (status) {
+                case 'new': return { label: 'جديد' };
+                case 'preparing': return { label: 'قيد التحضير' };
+                case 'ready': return { label: 'جاهز للتقديم 🔥' };
+                case 'delivered': return { label: 'تم التقديم' };
+                default: return { label: status };
+            }
+        }
+
+// دالة تحديث حالة الطلب وإرساله للحسابات والمالية
+async function markDelivered(index) {
+    const order = orders[index];
+
+    // 1. حساب إجمالي مبلغ الطلب
+    let totalAmount = order.totalPrice;
+    if (totalAmount === undefined || totalAmount === null) {
+        totalAmount = 0;
+        if (Array.isArray(order.items)) {
+            order.items.forEach(item => {
+                if (typeof item === "object" && item !== null) {
+                    let price = item.price || 0;
+                    let qty = item.quantity || item.qty || 1;
+                    totalAmount += price * qty;
+                }
+            });
+        }
+    }
+
+    try {
+        // 2. تحديث حالة الطلب في Firebase إلى delivered
+        await db.collection("orders").doc(order.firebaseId).update({
+            status: "delivered",
+            deliveredAt: Date.now()
+        });
+
+        // 3. تسجيل المبيعات في قاعدة بيانات Firebase مباشرة، بحيث تظهر فورًا
+        //    في شاشة الحسابات والمالية (finance.html) على أي جهاز متصل.
+        await recordSaleToFinance({
+            orderId: order.table ? `طاولة ${order.table}` : order.firebaseId,
+            amount: totalAmount,
+            paymentMethod: order.paymentMethod || "نقدي",
+            date: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error("Firebase delivery update error:", error);
+        alert("تعذر تحديث حالة الطلب.");
+    }
+}
+
+// تسجيل عملية البيع في مجموعة "sales" على Firestore، وهي نفس المجموعة
+// التي تقرأ منها شاشة الحسابات والمالية بشكل لحظي (onSnapshot).
+async function recordSaleToFinance(saleData) {
+    const saleId = `SALE-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    try {
+        await db.collection("sales").doc(saleId).set({
+            id: saleId,
+            orderId: String(saleData.orderId || ""),
+            amount: Number(saleData.amount) || 0,
+            paymentMethod: saleData.paymentMethod || "نقدي",
+            paymentStatus: "paid",
+            status: "completed",
+            date: saleData.date,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (err) {
+        console.error("خطأ أثناء تسجيل عملية البيع في Firebase:", err);
+        alert("⚠️ تم تسليم الطلب لكن تعذر تسجيل البيع في نظام المالية. تحقق من الاتصال.");
+    }
+}
+
+
+        function startTimer(startTimeStr, elementId) {
+            const start = new Date(startTimeStr);
+            const el = document.getElementById(elementId);
+            if (!el || isNaN(start.getTime())) return;
+
+            function update() {
+                const now = new Date();
+                let diffSec = Math.floor((now - start) / 1000);
+                if (diffSec < 0) diffSec = 0;
+                const m = Math.floor(diffSec / 60);
+                const s = diffSec % 60;
+                el.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            }
+
+            update();
+            const interval = setInterval(update, 1000);
+            timerIntervals.push(interval);
+        }
+
+        // الأحداث والتفاعل
+        document.getElementById("refreshBtn").onclick = loadOrders;
+        document.getElementById("statusFilter").onchange = renderOrders;
+        document.getElementById("searchInput").oninput = renderOrders;
+
+
+        // التشغيل المبدئي
+        loadOrders();
+    </script>
+</body>
+</html>

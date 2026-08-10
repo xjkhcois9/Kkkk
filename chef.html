@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>شاشة الشيف</title>  
+    <link rel="stylesheet" href="chef.css">  
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>  
+<body>  
+    <!-- مكتبات الفايربيس للربط السحابي -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+  // بيانات مشروعك الخاصة بـ Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyBqWQHxs7icdXVL2PuWAPtmnHUjPR2kpKc",
+    authDomain: "project-ac9d8.firebaseapp.com",
+    projectId: "project-ac9d8",
+    storageBucket: "project-ac9d8.firebasestorage.app",
+    messagingSenderId: "439451492727",
+    appId: "1:439451492727:web:acb3007ff68060a7300172"
+  };
+
+  // تهيئة قاعدة البيانات
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
+    <div class="container">  
+        <header>  
+            <h1>👨‍🍳 شاشة الشيف</h1>  
+            <div class="statistics">  
+                <div class="card red">  
+                    <span id="newCount">0</span>  
+                    <p>طلبات جديدة</p>  
+                </div>  
+                <div class="card yellow">  
+                    <span id="preparingCount">0</span>  
+                    <p>قيد التحضير</p>  
+                </div>  
+                <div class="card green">  
+                    <span id="readyCount">0</span>  
+                    <p>جاهزة</p>  
+                </div>  
+            </div>  
+        </header>  
+
+        <section class="toolbar">  
+            <input  
+                type="text"  
+                id="search"  
+                placeholder="🔍 البحث برقم الطاولة..."  
+            >  
+            <button id="refreshBtn">تحديث 🔄</button>  
+        </section>  
+
+        <section id="ordersContainer" class="orders">  
+            <!-- الطلبات تظهر هنا -->  
+        </section>
+    </div>  
+
+    <template id="orderTemplate">  
+        <div class="order-card">  
+            <div class="top">  
+                <h2>  
+                    🍽️ طاولة <span class="tableNumber"></span>  
+                </h2>  
+                <span class="status new">جديد</span>  
+            </div>  
+            <div class="body">  
+                <h3>الأصناف</h3>  
+                <ul class="items"></ul>  
+                <div class="note">  
+                    <strong>ملاحظات:</strong>  
+                    <p class="notes"></p>  
+                </div>  
+                <div class="timer">  
+                    ⏱️ <span class="time">00:00</span>  
+                </div>  
+            </div>  
+            <div class="buttons">  
+                <button class="startBtn">▶ بدء التحضير</button>  
+                <button class="finishBtn">✅ تم الانتهاء</button>  
+            </div>
+        </div>  
+    </template>  
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyBqWQHxs7icdXVL2PuWAPtmnHUjPR2kpKc",
+    authDomain: "project-ac9d8.firebaseapp.com",
+    projectId: "project-ac9d8",
+    storageBucket: "project-ac9d8.firebasestorage.app",
+    messagingSenderId: "439451492727",
+    appId: "1:439451492727:web:acb3007ff68060a7300172"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
+<script src="chef.js"></script>  
+</body>  
+</html>
