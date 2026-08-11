@@ -10,7 +10,10 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const firebaseConfig = {
+/*
+  ضع إعدادات Firebase الخاصة بمشروع مطعمي هنا.
+*/
+const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBqWQHxs7icdXVL2PuWAPtmnHUjPR2kpKc",
   authDomain: "project-ac9d8.firebaseapp.com",
   projectId: "project-ac9d8",
@@ -19,11 +22,12 @@ const firebaseConfig = {
   appId: "1:439451492727:web:acb3007ff68060a7300172"
 };
 
+/*
   غيّر أسماء الملفات إذا كانت صفحات نظامك تحمل أسماء مختلفة.
 */
 const ROLE_PAGES = {
-  admin: "admin.html",
-  manager: "admin.html",
+  admin: "finance.html",
+  manager: "finance.html",
   chef: "chef.html",
   waiter: "waiter.html"
 };
@@ -106,6 +110,104 @@ function normalizePermissions(data, role) {
   );
 }
 
+async function getUserProfile(uid) {
+  const snap = await getDoc(doc(db, "users", uid));
+
+  if (!snap.exists()) {
+    throw new Error("USER_PROFILE_NOT_FOUND");
+  }
+
+  const data = snap.data();
+  const role = normalizeRole(data.role);
+
+  if (!role || !ROLE_PAGES[role]) {
+    throw new Error("UNKNOWN_ROLE");
+  }
+
+  if (data.active === false) {
+    throw new Error("USER_DISABLED");
+  }
+
+  return {
+    ...data,
+    uid,
+    role,
+    permissions: normalizePermissions(data, role)
+  };
+}
+
+async function redirectByRole(user) {
+  const profile = await getUserProfile(user.uid);
+
+  sessionStorage.setItem("restaurantUser", JSON.stringify({
+    uid: profile.uid,
+    name: profile.name || "",
+    email: profile.email || user.email || "",
+    role: profile.role,
+    permissions: profile.permissions
+  }));
+
+  window.location.replace(ROLE_PAGES[profile.role]);
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return;
+
+  try {
+    await redirectByRole(user);
+  } catch (error) {
+    console.error(error);
+
+    if (error.message === "USER_PROFILE_NOT_FOUND") {
+      showMessage("الحساب موجود، لكن بياناته غير موجودة في users داخل Firestore.");
+    } else if (error.message === "UNKNOWN_ROLE") {
+      showMessage("دور المستخدم غير محدد أو غير مدعوم.");
+    } else if (error.message === "USER_DISABLED") {
+      showMessage("هذا المستخدم معطل من قبل المدير.");
+    } else {
+      showMessage("تعذر تحديد صلاحيات المستخدم.");
+    }
+  }
+});
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+
+  if (!email || !password) {
+    showMessage("أدخل البريد الإلكتروني وكلمة المرور.");
+    return;
+  }
+
+  setLoading(true);
+  showMessage("");
+
+  try {
+    const credential = await signInWithEmailAndPassword(auth, email, password);
+    await redirectByRole(credential.user);
+  } catch (error) {
+    console.error(error);
+    showMessage(
+      error.message === "USER_PROFILE_NOT_FOUND"
+        ? "الحساب موجود لكن لم تتم إضافة بياناته في Firestore."
+        : error.message === "UNKNOWN_ROLE"
+        ? "دور هذا المستخدم غير معروف."
+        : error.message === "USER_DISABLED"
+        ? "هذا الحساب معطل."
+        : getFriendlyAuthError(error)
+    );
+  } finally {
+    setLoading(false);
+  }
+});
+
+togglePassword.addEventListener("click", () => {
+  const show = passwordInput.type === "password";
+  passwordInput.type = show ? "text" : "password";
+  togglePassword.textContent = show ? "🙈" : "👁";
+}); ما هو 
 async function getUserProfile(uid) {
   const snap = await getDoc(doc(db, "users", uid));
 
