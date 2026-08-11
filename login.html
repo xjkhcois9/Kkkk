@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول - نظام مطعمي</title>
+  <link rel="stylesheet" href="login.css">
+</head>
+<body>
+  <main class="login-page">
+    <section class="login-card">
+      <div class="brand">
+        <div class="brand-icon">🍽️</div>
+        <h1>نظام مطعمي</h1>
+        <p>تسجيل الدخول إلى لوحة النظام</p>
+      </div>
+
+      <form id="loginForm" autocomplete="on">
+        <div class="field">
+          <label for="email">البريد الإلكتروني</label>
+          <input id="email" name="email" type="email" placeholder="example@restaurant.com"
+                 autocomplete="username" required>
+        </div>
+
+        <div class="field">
+          <label for="password">كلمة المرور</label>
+          <div class="password-wrap">
+            <input id="password" name="password" type="password" placeholder="أدخل كلمة المرور"
+                   autocomplete="current-password" required minlength="6">
+            <button type="button" id="togglePassword" class="password-toggle" aria-label="إظهار كلمة المرور">👁</button>
+          </div>
+        </div>
+
+        <div id="message" class="message" role="alert" aria-live="polite"></div>
+
+        <button id="loginBtn" class="login-btn" type="submit">
+          <span id="btnText">تسجيل الدخول</span>
+          <span id="spinner" class="spinner hidden"></span>
+        </button>
+      </form>
+
+      <div class="roles">
+        <span>المدير</span>
+        <span>الشيف</span>
+        <span>النادل</span>
+      </div>
+    </section>
+  </main>
+
+  <!-- Firebase SDK -->
+  <script type="module" src="login.js"></script>
+</body>
+</html>
