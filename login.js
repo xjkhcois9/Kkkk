@@ -1,54 +1,28 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/*
-  ضع إعدادات Firebase الخاصة بمشروع مطعمي هنا.
-*/
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBqWQHxs7icdXVL2PuWAPtmnHUjPR2kpKc",
-  authDomain: "project-ac9d8.firebaseapp.com",
-  projectId: "project-ac9d8",
-  storageBucket: "project-ac9d8.firebasestorage.app",
-  messagingSenderId: "439451492727",
-  appId: "1:439451492727:web:acb3007ff68060a7300172"
+  apiKey: "PUT_YOUR_API_KEY_HERE",
+  authDomain: "PUT_YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "PUT_YOUR_PROJECT_ID",
+  storageBucket: "PUT_YOUR_PROJECT_ID.firebasestorage.app",
+  messagingSenderId: "PUT_YOUR_SENDER_ID_HERE",
+  appId: "PUT_YOUR_APP_ID_HERE"
 };
 
-/*
-  غيّر أسماء الملفات إذا كانت صفحات نظامك تحمل أسماء مختلفة.
-*/
 const ROLE_PAGES = {
-  admin: "finance.html",
-  manager: "finance.html",
+  admin: "admin.html",
+  manager: "admin.html",
   chef: "chef.html",
   waiter: "waiter.html"
 };
 
 const ALL_PERMISSIONS = [
-  "dashboard_view",
-  "users_manage",
-  "permissions_manage",
-  "menu_manage",
-  "orders_view",
-  "orders_prepare",
-  "orders_ready",
-  "orders_pickup",
-  "orders_serve",
-  "sales_view",
-  "finance_view",
-  "profit_view",
-  "inventory_view",
-  "inventory_manage",
-  "reports_view",
-  "settings_manage"
+  "dashboard_view","users_manage","permissions_manage","menu_manage",
+  "orders_view","orders_prepare","orders_ready","orders_pickup","orders_serve",
+  "sales_view","finance_view","profit_view","inventory_view","inventory_manage",
+  "reports_view","settings_manage"
 ];
 
 const app = initializeApp(FIREBASE_CONFIG);
@@ -65,14 +39,16 @@ const message = document.getElementById("message");
 const togglePassword = document.getElementById("togglePassword");
 
 function showMessage(text, type = "error") {
+  if (!message) return;
   message.textContent = text;
   message.className = `message ${type}`;
 }
 
 function setLoading(loading) {
+  if (!loginBtn) return;
   loginBtn.disabled = loading;
-  spinner.classList.toggle("hidden", !loading);
-  btnText.textContent = loading ? "جارٍ تسجيل الدخول..." : "تسجيل الدخول";
+  if (spinner) spinner.classList.toggle("hidden", !loading);
+  if (btnText) btnText.textContent = loading ? "جارٍ تسجيل الدخول..." : "تسجيل الدخول";
 }
 
 function normalizeRole(role) {
@@ -81,28 +57,113 @@ function normalizeRole(role) {
 
 function getFriendlyAuthError(error) {
   switch (error?.code) {
-    case "auth/invalid-email":
-      return "البريد الإلكتروني غير صحيح.";
+    case "auth/invalid-email": return "البريد الإلكتروني غير صحيح.";
     case "auth/user-not-found":
     case "auth/wrong-password":
-    case "auth/invalid-credential":
-      return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
-    case "auth/user-disabled":
-      return "هذا الحساب معطل. تواصل مع المدير.";
-    case "auth/too-many-requests":
-      return "تمت محاولات دخول كثيرة. حاول لاحقًا.";
-    case "auth/network-request-failed":
-      return "تعذر الاتصال بالإنترنت.";
-    default:
-      return "حدث خطأ أثناء تسجيل الدخول.";
+    case "auth/invalid-credential": return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+    case "auth/user-disabled": return "هذا الحساب معطل من قبل المدير.";
+    case "auth/too-many-requests": return "تم إجراء محاولات تسجيل دخول كثيرة. حاول لاحقًا.";
+    case "auth/network-request-failed": return "تعذر الاتصال بالإنترنت.";
+    default: return "حدث خطأ أثناء تسجيل الدخول.";
   }
 }
 
 function normalizePermissions(data, role) {
-  // المدير يمتلك كل الصلاحيات.
   if (role === "admin" || role === "manager") {
     return Object.fromEntries(ALL_PERMISSIONS.map(p => [p, true]));
   }
+  const source = data?.permissions || {};
+  return Object.fromEntries(ALL_PERMISSIONS.map(p => [p, source[p] === true]));
+}
+
+async function getUserProfile(uid) {
+  if (!uid) throw new Error("USER_UID_MISSING");
+
+  const snap = await getDoc(doc(db, "users", uid));
+  if (!snap.exists()) throw new Error("USER_PROFILE_NOT_FOUND");
+
+  const data = snap.data();
+  const role = normalizeRole(data.role);
+
+  if (!role) throw new Error("ROLE_MISSING");
+  if (!ROLE_PAGES[role]) throw new Error("UNKNOWN_ROLE");
+  if (data.active === false) throw new Error("USER_DISABLED");
+
+  return {
+    uid,
+    name: data.name || "",
+    email: data.email || "",
+    role,
+    active: data.active !== false,
+    permissions: normalizePermissions(data, role)
+  };
+}
+
+function saveUserSession(profile) {
+  sessionStorage.setItem("restaurantUser", JSON.stringify(profile));
+}
+
+async function redirectByRole(firebaseUser) {
+  const profile = await getUserProfile(firebaseUser.uid);
+  saveUserSession(profile);
+  window.location.replace(ROLE_PAGES[profile.role]);
+}
+
+if (form) {
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!email) return showMessage("أدخل البريد الإلكتروني.");
+    if (!password) return showMessage("أدخل كلمة المرور.");
+
+    setLoading(true);
+    showMessage("");
+
+    try {
+      const credential = await signInWithEmailAndPassword(auth, email, password);
+      await redirectByRole(credential.user);
+    } catch (error) {
+      console.error("Login Error:", error);
+
+      const messages = {
+        USER_PROFILE_NOT_FOUND: "تم تسجيل الدخول، لكن لم يتم العثور على هذا المستخدم داخل users في Firestore.",
+        ROLE_MISSING: "تم العثور على المستخدم، لكن حقل role غير موجود في Firestore.",
+        UNKNOWN_ROLE: "دور هذا المستخدم غير معروف. يجب أن يكون admin أو chef أو waiter.",
+        USER_DISABLED: "هذا الحساب معطل من قبل المدير.",
+        USER_UID_MISSING: "تعذر الحصول على UID الخاص بالمستخدم."
+      };
+
+      showMessage(messages[error.message] || getFriendlyAuthError(error));
+
+      try { await signOut(auth); } catch (_) {}
+    } finally {
+      setLoading(false);
+    }
+  });
+}
+
+if (togglePassword) {
+  togglePassword.addEventListener("click", () => {
+    const show = passwordInput.type === "password";
+    passwordInput.type = show ? "text" : "password";
+    togglePassword.textContent = show ? "🙈" : "👁";
+  });
+}
+
+// لا يوجد onAuthStateChanged هنا.
+// فتح login.html لا يعيد التوجيه تلقائيًا.
+
+export async function logoutUser() {
+  try {
+    sessionStorage.removeItem("restaurantUser");
+    await signOut(auth);
+  } finally {
+    window.location.replace("login.html");
+  }
+}
 
   const source = data?.permissions || {};
   return Object.fromEntries(
