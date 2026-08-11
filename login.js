@@ -10,19 +10,15 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/*
-  ضع إعدادات Firebase الخاصة بمشروع مطعمي هنا.
-*/
-const FIREBASE_CONFIG = {
-  apiKey: "PUT_YOUR_API_KEY_HERE",
-  authDomain: "PUT_YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "PUT_YOUR_PROJECT_ID",
-  storageBucket: "PUT_YOUR_PROJECT_ID.firebasestorage.app",
-  messagingSenderId: "PUT_YOUR_SENDER_ID_HERE",
-  appId: "PUT_YOUR_APP_ID_HERE"
+const firebaseConfig = {
+  apiKey: "AIzaSyBqWQHxs7icdXVL2PuWAPtmnHUjPR2kpKc",
+  authDomain: "project-ac9d8.firebaseapp.com",
+  projectId: "project-ac9d8",
+  storageBucket: "project-ac9d8.firebasestorage.app",
+  messagingSenderId: "439451492727",
+  appId: "1:439451492727:web:acb3007ff68060a7300172"
 };
 
-/*
   غيّر أسماء الملفات إذا كانت صفحات نظامك تحمل أسماء مختلفة.
 */
 const ROLE_PAGES = {
