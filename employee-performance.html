@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>أداء الموظفين | نظام إدارة المطعم</title>
+<link rel="stylesheet" href="employee-performance.css">
+</head>
+<body>
+<div class="container">
+<header class="header">
+  <div>
+    <h1>📊 أداء الموظفين</h1>
+    <p>لوحة متكاملة لتحليل أداء فريق المطعم وربط الأداء بالطلبات والمبيعات والأرباح</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn secondary" id="refreshBtn">↻ تحديث البيانات</button>
+    <button class="btn" id="exportBtn">⬇ تصدير التقرير</button>
+  </div>
+</header>
+
+<section class="filters panel">
+  <div><label>الموظف</label><select id="employeeFilter"><option value="all">جميع الموظفين</option></select></div>
+  <div><label>الوظيفة</label><select id="roleFilter"><option value="all">جميع الوظائف</option><option value="شيف">شيف</option><option value="نادل">نادل</option><option value="مدير">مدير</option></select></div>
+  <div><label>الفترة</label><select id="period"><option value="day">اليوم</option><option value="week">هذا الأسبوع</option><option value="month" selected>هذا الشهر</option></select></div>
+  <div><label>البحث</label><input id="search" placeholder="ابحث باسم الموظف..."></div>
+</section>
+
+<section class="stats">
+  <div class="stat"><span>👥</span><b id="total">0</b><small>الموظفون</small></div>
+  <div class="stat"><span>⭐</span><b id="average">0%</b><small>متوسط الأداء</small></div>
+  <div class="stat"><span>🏆</span><b id="best">—</b><small>أفضل موظف</small></div>
+  <div class="stat"><span>⚠️</span><b id="needs">0</b><small>يحتاجون تحسين</small></div>
+  <div class="stat"><span>💰</span><b id="salesTotal">0</b><small>المبيعات</small></div>
+  <div class="stat"><span>📈</span><b id="profitTotal">0</b><small>صافي الربح</small></div>
+</section>
+
+<section class="panel">
+  <div class="section-head">
+    <div><h2>👥 الموظفون</h2><p>البيانات تُحسب تلقائياً من Firebase.</p></div>
+    <button class="btn" id="addEmployeeBtn">＋ إضافة موظف</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>الموظف</th><th>الوظيفة</th><th>الطلبات</th><th>السرعة</th><th>الدقة</th><th>العملاء</th><th>الحضور</th><th>الأداء</th><th>المبيعات</th><th>إجراء</th></tr></thead>
+      <tbody id="employeeTable"></tbody>
+    </table>
+    <div id="empty" class="empty">لا توجد نتائج.</div>
+  </div>
+</section>
+
+<div class="two-col">
+<section class="panel">
+  <h2>📈 ترتيب الأداء</h2>
+  <div id="ranking"></div>
+</section>
+<section class="panel">
+  <h2>📊 مقارنة الموظفين</h2>
+  <div id="mainChart" class="chart"></div>
+</section>
+</div>
+</div>
+
+<!-- Employee profile -->
+<div class="modal" id="profileModal">
+<div class="modal-box wide">
+<div class="modal-head">
+  <div class="profile-title"><div class="avatar big" id="profileAvatar">؟</div><div><h2 id="profileName">الموظف</h2><p id="profileRole">—</p></div></div>
+  <button class="close" id="closeProfile">×</button>
+</div>
+<div class="profile-grid">
+  <div class="metric"><small>الأداء</small><b id="pScore">0%</b></div>
+  <div class="metric"><small>الطلبات</small><b id="pOrders">0</b></div>
+  <div class="metric"><small>تقييم العملاء</small><b id="pRating">0%</b></div>
+  <div class="metric"><small>الالتزام</small><b id="pAttendance">0%</b></div>
+  <div class="metric"><small>المبيعات</small><b id="pSales">0</b></div>
+  <div class="metric"><small>التكاليف</small><b id="pCosts">0</b></div>
+  <div class="metric"><small>صافي الربح</small><b id="pProfit">0</b></div>
+  <div class="metric"><small>مقابل متوسط الفريق</small><b id="pVsTeam">—</b></div>
+</div>
+
+<div class="two-col">
+<section class="subpanel"><h3>📈 تاريخ الأداء</h3>
+<select id="historyRange"><option value="7">آخر 7 أيام</option><option value="30" selected>آخر 30 يوماً</option></select>
+<div id="historyChart" class="history-chart"></div>
+</section>
+<section class="subpanel"><h3>🧠 التحليل التلقائي</h3><div id="analysis" class="analysis"></div>
+<h3>🔔 التنبيهات</h3><div id="alerts"></div></section>
+</div>
+
+<section class="subpanel"><h3>🎯 أهداف الموظف</h3><div id="goals"></div></section>
+<section class="subpanel"><h3>📊 مؤشرات الأداء</h3><div id="breakdown"></div></section>
+</div>
+</div>
+
+<!-- Add employee -->
+<div class="modal" id="addModal">
+<div class="modal-box">
+<div class="modal-head"><h2>إضافة موظف</h2><button class="close" id="closeAdd">×</button></div>
+<form id="addForm">
+<label>الاسم</label><input id="newName" required>
+<label>الوظيفة</label><select id="newRole"><option value="chef">شيف</option><option value="waiter">نادل</option><option value="admin">مدير</option></select>
+<button class="btn full" type="submit">حفظ في Firebase</button>
+</form>
+</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="employee-performance.js"></script>
+</body>
+</html>
