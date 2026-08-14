@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المخزون</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF6ED;
+    --paper-dim:#F1EADA;
+    --ink:#2B2620;
+    --ink-soft:#6E6353;
+    --mustard:#B8862B;
+    --mustard-deep:#8C6520;
+    --teal:#2F5D62;
+    --teal-deep:#204345;
+    --danger:#B23A2F;
+    --line:#E1D5BB;
+    --card:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    background-image:
+      linear-gradient(var(--paper-dim) 1px, transparent 1px);
+    background-size: 100% 44px;
+    font-family:'IBM Plex Sans Arabic', sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    padding-bottom:110px;
+  }
+  header{
+    padding:28px 20px 18px;
+    border-bottom:3px solid var(--ink);
+    background:var(--paper);
+    position:sticky;
+    top:0;
+    z-index:5;
+  }
+  header h1{
+    font-family:'Tajawal', sans-serif;
+    font-weight:800;
+    font-size:30px;
+    margin:0;
+    letter-spacing:0.5px;
+  }
+  header p{
+    margin:6px 0 0;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+  .stats{
+    display:flex;
+    gap:10px;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+  .stat{
+    background:var(--card);
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    padding:8px 14px;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .stat b{
+    color:var(--ink);
+    font-family:'Tajawal', sans-serif;
+    font-size:16px;
+    font-weight:700;
+  }
+  .stat.warn{ border-color:var(--danger); }
+  .stat.warn b{ color:var(--danger); }
+
+  .actions{
+    display:flex;
+    gap:10px;
+    padding:16px 20px 4px;
+  }
+  .btn{
+    font-family:'Tajawal', sans-serif;
+    font-weight:700;
+    font-size:15px;
+    border:none;
+    border-radius:10px;
+    padding:12px 18px;
+    cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .btn:active{ transform:scale(0.97); }
+  .btn-add{
+    background:var(--teal);
+    color:#fff;
+    flex:1;
+    justify-content:center;
+    box-shadow:0 3px 0 var(--teal-deep);
+  }
+  .btn-add:active{ box-shadow:0 1px 0 var(--teal-deep); }
+  .btn-del{
+    background:var(--card);
+    color:var(--danger);
+    border:1.5px solid var(--danger);
+  }
+  .btn-del[disabled]{
+    opacity:.4;
+    cursor:not-allowed;
+  }
+
+  .list{
+    padding:14px 20px 0;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .empty{
+    text-align:center;
+    color:var(--ink-soft);
+    padding:60px 20px;
+    font-size:15px;
+    line-height:1.9;
+  }
+  .empty .tag{
+    display:inline-block;
+    border:2px dashed var(--line);
+    border-radius:12px;
+    padding:22px 26px;
+    font-family:'Tajawal', sans-serif;
+  }
+
+  .card{
+    background:var(--card);
+    border:1.5px solid var(--line);
+    border-radius:14px;
+    display:flex;
+    align-items:stretch;
+    overflow:hidden;
+    box-shadow:0 2px 0 var(--line);
+    position:relative;
+  }
+  .card.expiring{ border-color:var(--danger); }
+
+  .badge{
+    background:var(--mustard);
+    color:#fff;
+    font-family:'Tajawal', sans-serif;
+    font-weight:800;
+    font-size:20px;
+    width:52px;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-left:1.5px solid var(--line);
+  }
+  .card.expiring .badge{ background:var(--danger); }
+
+  .body{
+    flex:1;
+    padding:12px 14px;
+    min-width:0;
+  }
+  .name-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .name{
+    font-family:'Tajawal', sans-serif;
+    font-weight:700;
+    font-size:17px;
+    background:transparent;
+    border:none;
+    color:var(--ink);
+    width:100%;
+    padding:2px 0;
+  }
+  .name:focus{ outline:none; border-bottom:1.5px solid var(--mustard); }
+
+  .select-box{
+    width:22px;
+    height:22px;
+    accent-color:var(--teal);
+    flex-shrink:0;
+    cursor:pointer;
+  }
+
+  .meta-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:10px;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .expiry{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .expiry input{
+    font-family:'IBM Plex Sans Arabic', sans-serif;
+    font-size:13px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    padding:5px 7px;
+    color:var(--ink);
+    background:var(--paper);
+  }
+  .expiry.soon{ color:var(--danger); font-weight:600; }
+
+  .qty{
+    display:flex;
+    align-items:center;
+    gap:0;
+    border:1.5px solid var(--line);
+    border-radius:9px;
+    overflow:hidden;
+  }
+  .qty button{
+    width:32px;
+    height:32px;
+    border:none;
+    background:var(--paper-dim);
+    font-size:18px;
+    font-weight:700;
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .qty button:hover{ background:var(--mustard); color:#fff; }
+  .qty .count{
+    width:38px;
+    text-align:center;
+    font-family:'Tajawal', sans-serif;
+    font-weight:700;
+    font-size:15px;
+  }
+
+  .del-single{
+    background:none;
+    border:none;
+    color:var(--ink-soft);
+    cursor:pointer;
+    padding:10px 12px;
+    font-size:13px;
+    border-right:1.5px solid var(--line);
+    flex-shrink:0;
+    writing-mode: vertical-rl;
+    font-family:'Tajawal', sans-serif;
+    font-weight:600;
+  }
+  .del-single:hover{ color:var(--danger); }
+
+  .toast{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--ink);
+    color:var(--paper);
+    padding:10px 20px;
+    border-radius:10px;
+    font-size:14px;
+    opacity:0;
+    transition:opacity .25s ease, transform .25s ease;
+    pointer-events:none;
+    z-index:20;
+    font-family:'Tajawal', sans-serif;
+  }
+  .toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+
+  @media (max-width:420px){
+    .badge{ width:42px; font-size:17px; }
+    header h1{ font-size:26px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>المخزون</h1>
+  <p>تتبّع منتجات المطعم وكمياتها وتواريخ الصلاحية</p>
+  <div class="stats">
+    <div class="stat">المنتجات: <b id="statCount">0</b></div>
+    <div class="stat warn">قاربت على الانتهاء: <b id="statSoon">0</b></div>
+  </div>
+</header>
+
+<div class="actions">
+  <button class="btn btn-add" id="addBtn">＋ إضافة منتج</button>
+  <button class="btn btn-del" id="delBtn" disabled>حذف المحدد</button>
+</div>
+
+<div class="list" id="list"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let products = [];
+let nextNum = 1;
+
+const list = document.getElementById('list');
+const statCount = document.getElementById('statCount');
+const statSoon = document.getElementById('statSoon');
+const delBtn = document.getElementById('delBtn');
+const toastEl = document.getElementById('toast');
+
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastEl._t);
+  toastEl._t = setTimeout(()=> toastEl.classList.remove('show'), 1800);
+}
+
+function daysUntil(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr);
+  const now = new Date();
+  d.setHours(0,0,0,0); now.setHours(0,0,0,0);
+  return Math.round((d-now)/86400000);
+}
+
+async function save(){
+  try{
+    await window.storage.set('inventory-products', JSON.stringify(products), false);
+  }catch(e){ console.error('storage error', e); }
+}
+
+async function load(){
+  try{
+    const res = await window.storage.get('inventory-products', false);
+    if(res && res.value){
+      products = JSON.parse(res.value);
+      nextNum = products.reduce((m,p)=> Math.max(m, p.num||0), 0) + 1;
+    }
+  }catch(e){
+    // no data yet
+  }
+  render();
+}
+
+function render(){
+  list.innerHTML = '';
+  if(products.length === 0){
+    list.innerHTML = `<div class="empty"><div class="tag">المخزون فارغ حالياً<br>اضغط «إضافة منتج» للبدء</div></div>`;
+  }
+  let soonCount = 0;
+  products.forEach(p=>{
+    const d = daysUntil(p.expiry);
+    const isSoon = d !== null && d <= 3;
+    if(isSoon) soonCount++;
+
+    const card = document.createElement('div');
+    card.className = 'card' + (isSoon ? ' expiring' : '');
+    card.innerHTML = `
+      <button class="del-single" data-id="${p.id}" title="حذف المنتج">حذف</button>
+      <div class="body">
+        <div class="name-row">
+          <input class="name" value="${p.name.replace(/"/g,'&quot;')}" data-id="${p.id}" placeholder="اسم المنتج">
+          <input type="checkbox" class="select-box" data-id="${p.id}" ${p.selected ? 'checked' : ''}>
+        </div>
+        <div class="meta-row">
+          <div class="expiry ${isSoon ? 'soon' : ''}">
+            تاريخ الصلاحية:
+            <input type="date" value="${p.expiry||''}" data-id="${p.id}" class="expiry-input">
+          </div>
+          <div class="qty">
+            <button class="minus" data-id="${p.id}">−</button>
+            <span class="count">${p.qty}</span>
+            <button class="plus" data-id="${p.id}">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="badge">${p.num}</div>
+    `;
+    list.appendChild(card);
+  });
+
+  statCount.textContent = products.length;
+  statSoon.textContent = soonCount;
+
+  const anySelected = products.some(p=>p.selected);
+  delBtn.disabled = !anySelected;
+
+  // wire events
+  list.querySelectorAll('.plus').forEach(b=> b.onclick = ()=>changeQty(b.dataset.id, 1));
+  list.querySelectorAll('.minus').forEach(b=> b.onclick = ()=>changeQty(b.dataset.id, -1));
+  list.querySelectorAll('.del-single').forEach(b=> b.onclick = ()=>deleteOne(b.dataset.id));
+  list.querySelectorAll('.select-box').forEach(b=> b.onchange = ()=>toggleSelect(b.dataset.id, b.checked));
+  list.querySelectorAll('.name').forEach(inp=> inp.onchange = ()=>renameProduct(inp.dataset.id, inp.value));
+  list.querySelectorAll('.expiry-input').forEach(inp=> inp.onchange = ()=>setExpiry(inp.dataset.id, inp.value));
+}
+
+function changeQty(id, delta){
+  const p = products.find(x=>x.id===id);
+  if(!p) return;
+  p.qty = Math.max(0, p.qty + delta);
+  save(); render();
+}
+
+function deleteOne(id){
+  products = products.filter(p=>p.id!==id);
+  save(); render();
+  toast('تم حذف المنتج');
+}
+
+function toggleSelect(id, val){
+  const p = products.find(x=>x.id===id);
+  if(p) p.selected = val;
+  save(); render();
+}
+
+function renameProduct(id, val){
+  const p = products.find(x=>x.id===id);
+  if(p) p.name = val || `منتج رقم ${p.num}`;
+  save();
+}
+
+function setExpiry(id, val){
+  const p = products.find(x=>x.id===id);
+  if(p) p.expiry = val;
+  save(); render();
+}
+
+document.getElementById('addBtn').onclick = ()=>{
+  const p = { id: 'p'+Date.now()+Math.random().toString(36).slice(2,6), num: nextNum++, name: `منتج رقم ${nextNum-1}`, qty: 1, expiry: '', selected:false };
+  products.unshift(p);
+  save(); render();
+  toast('تمت إضافة المنتج');
+};
+
+delBtn.onclick = ()=>{
+  const removed = products.filter(p=>p.selected).length;
+  products = products.filter(p=>!p.selected);
+  save(); render();
+  toast(`تم حذف ${removed} منتج`);
+};
+
+load();
+</script>
+</body>
+</html>
